@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<script>
+!(function(j,a,g){j.__itrace_conf = {bid: 'f43basl8-6nqu7l3w',rel: '0.0.1', spa: true, uid: '', plugins:['jserror','interface','perf','resource','flow','blank']};var b = a.createElement("script");var d = a.getElementsByTagName("script")[0];b.type = "text/javascript";b.crossorigin = true;b.async = true;b.onload = function(){j.__itrace && j.__itrace.setReady()};d.parentNode.insertBefore(b,d);b.src = g})(window, document, "https://g.alicdn.com/woodpeckerx/itrace-next/itrace.iife.js")
+</script>
+
+<!-- 同站请求保留Referer，跨站请求不发送 -->
+<meta name="referrer" content="same-origin">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oreacle · 我的世界赛博算卦所</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#f7f8fa;color:#333;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;font-size:15px;line-height:1.6}
+.container{max-width:860px;margin:0 auto;padding:0 20px}
+header{display:flex;justify-content:space-between;align-items:flex-end;padding:24px 0 12px;border-bottom:3px solid #5db63a}
+.header-left{display:flex;align-items:center;gap:8px}
+.header-title{font-size:22px;font-weight:700;color:#333}
+.header-icon{font-size:22px}
+.header-stats{font-size:12px;color:#999;text-align:right;line-height:1.5}
+.header-stats span{color:#5db63a;font-weight:600}
+main{padding:32px 0 24px}
+.guide-text{font-size:17px;color:#555;text-align:center;margin-bottom:24px}
+.btn-area{text-align:center;margin-bottom:8px}
+.mc-btn{display:inline-block;background:#8b8b8b;border:4px solid;border-color:#c6c6c6 #555 #555 #c6c6c6;color:#e8e8e8;font-size:18px;font-weight:700;padding:12px 52px;cursor:pointer;text-shadow:2px 2px 0 #3f3f3f;letter-spacing:3px;font-family:"Courier New",monospace;outline:none;user-select:none;transition:none;position:relative}
+.mc-btn:hover:not(:disabled){background:#9e9e9e;border-color:#d8d8d8 #666 #666 #d8d8d8;color:#ffffa0}
+.mc-btn:active:not(:disabled){background:#6d6d6d;border-color:#555 #c6c6c6 #c6c6c6 #555;padding-top:14px;padding-bottom:10px}
+.mc-btn:disabled{cursor:not-allowed;opacity:.75}
+.btn-sub{font-size:12px;color:#999;text-align:center;margin-top:10px}
+.anim-wrap{text-align:center;margin-top:16px;display:none}
+.anim-text{font-size:14px;color:#5db63a;margin-bottom:8px;min-height:22px}
+.progress-bar{width:280px;height:10px;background:#e8e8e8;border-radius:5px;margin:0 auto;overflow:hidden;border:1px solid #ddd}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#5db63a,#7ed957);border-radius:5px;transition:width .15s linear}
+.result-card{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:28px 32px;margin:28px 0;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.result-card.cheat-warn{border-top:3px solid #FF9800}
+.cheat-banner{background:#FFF3E0;color:#E65100;padding:10px 14px;border-radius:4px;font-size:13px;margin-bottom:18px;line-height:1.5}
+.blocked-banner{background:#E8F5E9;color:#2E7D32;padding:12px 14px;border-radius:4px;font-size:14px;margin-bottom:18px;text-align:center}
+.blocked-banner .countdown{font-size:20px;font-weight:700;color:#5db63a;margin:6px 0}
+.blocked-banner .tease{font-size:12px;color:#666;margin-top:4px}
+.level-badge{display:inline-block;padding:4px 16px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:12px;border:2px solid}
+.gua-name{font-size:20px;font-weight:700;margin-bottom:16px;color:#333}
+.section-title{font-size:14px;font-weight:700;color:#5db63a;border-left:3px solid #5db63a;padding-left:8px;margin:20px 0 10px}
+.yao-diagram{display:flex;flex-direction:column;align-items:center;gap:5px;margin:12px 0 16px;padding:16px;background:#fafafa;border-radius:6px;border:1px solid #eee}
+.yao-row{display:flex;justify-content:center;gap:0}
+.yao-yang{width:120px;height:14px;background:linear-gradient(to bottom,#5db63a 35%,#8B6914 35%);border:1px solid #4a9a2e;border-radius:1px}
+.yao-yin{display:flex;gap:18px}
+.yao-yin-half{width:46px;height:14px;background:linear-gradient(to bottom,#5db63a 35%,#8B6914 35%);border:1px solid #4a9a2e;border-radius:1px}
+.trigram-info{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:4px;font-size:14px;color:#555}
+.trigram-info .ti-item{display:flex;align-items:center;gap:4px}
+.guaci-text{font-size:15px;color:#444;line-height:1.7;padding:8px 0;font-style:italic}
+.yiji-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.yiji-col{font-size:14px}
+.yiji-col h4{font-size:13px;margin-bottom:6px}
+.yiji-col.yi h4{color:#5db63a}
+.yiji-col.ji h4{color:#e53935}
+.yiji-col ul{list-style:none;padding:0}
+.yiji-col li{padding:2px 0;font-size:13px;color:#555}
+.yiji-col.yi li::before{content:"✅ ";font-size:11px}
+.yiji-col.ji li::before{content:"❌ ";font-size:11px}
+.tips-list{list-style:none;padding:0}
+.tips-list li{font-size:13px;color:#555;padding:4px 0;border-bottom:1px dashed #eee;line-height:1.6}
+.tips-list li:last-child{border-bottom:none}
+.tips-list li::before{content:"💡 ";font-size:12px}
+.lucky-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;font-size:13px;color:#555}
+.lucky-grid .lk-item{padding:4px 0}
+.lucky-grid .lk-label{color:#999;font-size:12px}
+.wool-swatch{display:inline-block;width:14px;height:14px;border-radius:2px;vertical-align:middle;margin-right:4px;border:1px solid #ccc}
+.poem-box{background:#fafafa;border:1px solid #eee;border-radius:6px;padding:14px 18px;font-size:14px;color:#555;line-height:1.8;font-style:italic}
+.ip-line{font-size:11px;color:#bbb;margin-top:12px}
+.last-fortune{margin:0 0 20px;font-size:13px;color:#666;text-align:center;padding:10px 14px;background:#f0f7ec;border:1px solid #d5e8cc;border-radius:6px}
+.records-section{margin:36px 0 0}
+.records-note{font-size:12px;color:#999;margin-bottom:8px;font-style:italic}
+.records-empty{font-size:13px;color:#999;text-align:center;padding:20px;background:#fff;border:1px solid #e0e0e0;border-radius:6px}
+.records-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid #e0e0e0;border-radius:6px;overflow:hidden}
+.records-table th{background:#f0f0f0;color:#555;font-weight:600;padding:10px 12px;text-align:left;border-bottom:1px solid #ddd}
+.records-table td{padding:9px 12px;border-bottom:1px solid #eee;color:#555}
+.records-table tr:nth-child(even) td{background:#fafafa}
+.records-table tr:last-child td{border-bottom:none}
+.records-table .level-cell{font-weight:600;font-size:12px}
+footer{padding:24px 0;border-top:1px solid #e8e8e8;margin-top:36px}
+.footer-main{font-size:13px;color:#888;text-align:center}
+.footer-sub{font-size:11px;color:#bbb;text-align:center;margin-top:6px;line-height:1.6;max-width:640px;margin-left:auto;margin-right:auto}
+@media(max-width:600px){
+  header{flex-direction:column;align-items:flex-start;gap:6px}
+  .header-stats{text-align:left}
+  .result-card{padding:20px 16px}
+  .yiji-grid{grid-template-columns:1fr}
+  .lucky-grid{grid-template-columns:1fr}
+  .mc-btn{padding:10px 36px;font-size:16px}
+  .trigram-info{flex-direction:column;gap:6px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="header-left">
+      <span class="header-icon">🟩</span>
+      <span class="header-title">我的世界 · 赛博算卦所</span>
+    </div>
+    <div class="header-stats" id="headerStats">今日访问 <span id="statVisits">--</span> &nbsp;|&nbsp; 今日算卦 <span id="statFortunes">--</span></div>
+  </header>
+  <main>
+    <section class="last-fortune" id="lastFortune" style="display:none"></section>
+    <section id="fortuneSection">
+      <p class="guide-text">天道有常，每日一卦。让红石电路为你指引今日运势。</p>
+      <div class="btn-area">
+        <button class="mc-btn" id="fortuneBtn" type="button">开始算卦</button>
+      </div>
+      <p class="btn-sub">每日一卦 · 每日 00:00 刷新</p>
+      <div class="anim-wrap" id="animWrap">
+        <div class="anim-text" id="animText"></div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+    </section>
+    <section id="resultSection" style="display:none"></section>
+    <section class="records-section" id="recordsSection"></section>
+  </main>
+  <footer>
+    <div class="footer-main">&copy; 赛博算卦所 · 卦象纯属娱乐，挖矿请遵守（游戏内的）物理规律</div>
+    <div class="footer-sub">本页面为纯前端演示：今日访问统计为本地模拟数据；每日一卦限制基于浏览器本地多层存储 + 设备指纹实现，无服务器参与。若所在环境禁用了本地存储，限制将自动降级。</div>
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+// ========== Data Pools ==========
+var TRIGRAMS=[
+  {name:'苦力怕',icon:'🟢',domain:'惊变·暗雷',weight:3,virtue:'嘶——轰！人生处处是惊喜'},
+  {name:'岩浆',icon:'🟠',domain:'危机·热血',weight:4,virtue:'炽热致命，亦能炼金'},
+  {name:'泥土',icon:'🟤',domain:'平凡·踏实',weight:5,virtue:'厚德载物，垫脚石亦是基石'},
+  {name:'末影',icon:'🟣',domain:'变动·隐秘',weight:6,virtue:'瞬移千里，不可捉摸'},
+  {name:'村民',icon:'🟫',domain:'人缘·交易',weight:7,virtue:'哼一声，便是成交'},
+  {name:'黑曜石',icon:'🟪',domain:'守成·稳固',weight:7,virtue:'任尔东西南北风，我自岿然不动'},
+  {name:'红石',icon:'🔴',domain:'智慧·创造',weight:8,virtue:'一通则百通，机关自成'},
+  {name:'钻石',icon:'💎',domain:'财运·机缘',weight:9,virtue:'至坚至贵，得之我幸'}
+];
+
+var GUACI_POOL=[
+  '潜龙勿用，矿洞未明。今日宜苟，不宜硬刚。',
+  '见龙在田，利见村民。绿宝石自远方来，折扣不请自来。',
+  '飞龙在天，欧气灌顶。此时不抽卡，更待何时。',
+  '亢龙有悔，跳高必摔。携带水桶者，可免一难。',
+  '云行雨施，服务器顺畅。今日建造，事半功倍。',
+  '天行健，君子以自强不息挖矿。',
+  '地势坤，君子以厚德载物资。',
+  '密云不雨，苦力怕潜伏于野。出门先看墙角。',
+  '龙战于野，其血玄黄。PVP 凶，先手为强。',
+  '枯杨生稊，废弃矿井藏宝箱。旧图重游有惊喜。',
+  '鸣鹤在阴，其子和之。组队开黑，大吉。',
+  '履霜坚冰至，下雪生物群系记得穿暖。',
+  '包荒得金，泥土之下亦有钻石。',
+  '同人于野，亨。公会招募，宜报名。',
+  '硕果不食，种下去的麦子明天才熟。急不得。',
+  '观我生，进退。卡关时回头看看攻略，不丢人。',
+  '噬嗑，亨。苦力怕咬不到你，因为你跑得快。',
+  '贲如皤如，白马翰如。骑猪配鞍，出行大吉。',
+  '复卦，亨。重来一次又何妨，复活点永远等你。',
+  '颐卦，贞吉。先吃饱再冒险，面包管够。',
+  '大过，栋桡。房子塌了是吉兆——旧的不去新的不来。',
+  '坎卦，习坎。落水三次，方学会游泳。',
+  '离卦，利贞。火把在手，天下我有。',
+  '咸卦，取女吉。驯服一只狼，收获一生挚友。'
+];
+
+var YI_POOL=[
+  '下矿挖钻','开宝箱','附魔','盖房子','跑图探险','钓鱼',
+  '繁殖动物','找村民交易','打末影龙','开荒新存档','驯服宠物',
+  '种田收割','红石创作','下界冒险','海上航行','堆雪人'
+];
+
+var JI_POOL=[
+  '挖竖直矿','夜间不带火把','惹末影人','低血量进下界',
+  '在家门口点TNT','砍价太狠','站在岩浆边上','立flag',
+  '不存档开宝箱','用最后的镐子','雨天举铁剑','跟苦力怕合影',
+  '高空不搭脚手架','裸装打龙','乱按红石按钮','深夜肝建筑'
+];
+
+var TIPS_POOL=[
+  '苦力怕爆炸倒计时约1.5秒，转身跑比回头砍更稳。',
+  '水桶是原版最强保命道具：落地水、浇岩浆、挡末影人，样样精通。',
+  '钻石在 Y=-59 附近最密集，但记住——先挖楼梯矿，别直着往下刨。',
+  '末影人不会瞬移到水里，被盯上了就往水里站。',
+  '床边放箱子的人，运气都不会太差。',
+  '今天的幸运数字是存档种子号的最后三位。',
+  '村民打折的秘诀：先治好一只僵尸村民，全村感恩。',
+  '红石中继器最多延迟4刻，人生也是，别急。',
+  '下界合金在 Y=15 附近，记得带抗火药水和方块。',
+  '火把可以融化脚下的雪，但融化不了苦力怕的心。',
+  '猪灵看见金装备会行礼，出门带块金锭好办事。',
+  '钓鱼可以钓到附魔书，耐心比时运更值钱。',
+  '鞘翅配烟花，是原版最自由的交通工具，也是今日运势的写照。',
+  '潜影盒是移动的仓库，出门在外，多备几个。',
+  '蜜蜂会记仇，惹一只等于惹一窝。今日慎言。',
+  '雪傀儡走到哪雪下到哪，今日适合留下足迹。',
+  '岩浆块上放灵魂沙就是天然电梯。运势低迷时，记得找上升气流。',
+  '经验修补附魔的装备越用越新。旧东西别急着扔。',
+  '凋灵骷髅只在要塞附近出没，机会只留给蹲点的人。',
+  '唱片机放一张唱片，苦力怕听了都想跳舞（并不会）。',
+  '空岛生存第一课：先搭平台再想别的。今日宜打基础。',
+  '指南针永远指向出生点，迷路了就想想初心。',
+  '附魔台要摆满15个书架才能满级，积累不到位的努力都是虚的。',
+  '雨天睡觉可以跳过坏天气，今天的不开心也睡一觉再说。'
+];
+
+var POEM_POOL=[
+  '朝辞苦力怕彩云间，千里钻石一日还。两岸猿声啼不住，我已挖到负五十九层山。',
+  '锄禾日当午，挖矿真辛苦。今日欧气足，一镐出三五。',
+  '床前明月光，疑是钻石矿。举头望末影，低头思故乡。',
+  '日照香炉生紫烟，遥看岩浆挂前川。飞流直下三千尺，还好我带了水桶。',
+  '两个黄鹂鸣翠柳，一行玩家上西天。窗含西岭千秋雪，门泊东吴万里船。（今日宜远航）',
+  '春眠不觉晓，处处僵尸叫。夜来风雨声，房子塌多少。',
+  '白日依山尽，红石入海流。欲穷千里目，更上一层楼。（宜造瞭望塔）',
+  '葡萄美酒夜光杯，欲饮琵琶马上催。醉卧沙场君莫笑，复活点里我再来。'
+];
+
+var LUCKY_ITEMS=['钻石镐','金苹果','附魔金苹果','末影珍珠','红石粉','火把','水桶','鞘翅','三叉戟','绿宝石','不死图腾','紫颂果','岩浆膏','蜂蜜瓶','烟花火箭','指南针'];
+
+var LUCKY_ENCHANTS=['时运 III','经验修补','耐久 III','锋利 V','保护 IV','效率 V','无限','冰霜行者 II','深海探索者 III','灵魂疾行 III','引雷','多重射击','忠诚 III','穿刺 IV'];
+
+var LUCKY_COORDS=[
+  '主世界 Y=-59（钻石层）','主世界 Y=63（海平面）','主世界 Y=320（建筑上限）',
+  '下界 Y=15（远古残骸层）','末地中央岛','海底神殿正上方','村庄钟楼顶端'
+];
+
+var WOOL_COLORS=[
+  {name:'白色羊毛',hex:'#F0F0F0'},{name:'橙色羊毛',hex:'#D87F33'},
+  {name:'品红色羊毛',hex:'#B24CD8'},{name:'淡蓝色羊毛',hex:'#6689D3'},
+  {name:'黄色羊毛',hex:'#E5E533'},{name:'黄绿色羊毛',hex:'#7FCC19'},
+  {name:'粉色羊毛',hex:'#F27FA5'},{name:'灰色羊毛',hex:'#4C4C4C'},
+  {name:'淡灰色羊毛',hex:'#999999'},{name:'青色羊毛',hex:'#4C7F99'},
+  {name:'紫色羊毛',hex:'#7B3FAE'},{name:'蓝色羊毛',hex:'#334CB2'},
+  {name:'棕色羊毛',hex:'#664C33'},{name:'绿色羊毛',hex:'#667F33'},
+  {name:'红色羊毛',hex:'#993300'},{name:'黑色羊毛',hex:'#1A1A1A'}
+];
+
+var ANIM_TEXTS=['正在连接赛博天道…','解析红石信号…','向 Notch 祈祷…','编译卦象中…','校验欧气余额…'];
+
+
+var FORTUNE_LEVELS=[
+  {name:'苦力怕大凶',min:0,text:'嘶……今日宜静不宜动',color:'#F44336'},
+  {name:'非酋小凶',min:3.5,text:'建议今日避开草丛',color:'#FF9800'},
+  {name:'平',min:4.5,text:'平稳发育，别浪就行',color:'#999'},
+  {name:'小吉',min:5.5,text:'有惊无险，掉落翻倍',color:'#8BC34A'},
+  {name:'中吉',min:7.0,text:'时运附魔已生效',color:'#5db63a'},
+  {name:'欧皇大吉',min:8.5,text:'天道为你开了创造模式',color:'#D4A017'}
+];
+
+// ========== Hash & PRNG ==========
+function cyrb53(str,seed){
+  seed=seed||0;
+  var h1=0xdeadbeef^seed, h2=0x41c6ce57^seed;
+  for(var i=0;i<str.length;i++){
+    var ch=str.charCodeAt(i);
+    h1=Math.imul(h1^ch,2654435761);
+    h2=Math.imul(h2^ch,1597334677);
+  }
+  h1=Math.imul(h1^(h1>>>16),2246822507);
+  h1^=Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507);
+  h2^=Math.imul(h1^(h1>>>13),3266489909);
+  return 4294967296*(2097151&h2)+(h1>>>0);
+}
+
+function mulberry32(seed){
+  return function(){
+    seed|=0;seed=seed+0x6D2B79F5|0;
+    var t=Math.imul(seed^seed>>>15,1|seed);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return((t^t>>>14)>>>0)/4294967296;
+  };
+}
+
+// ========== Date Helpers ==========
+function getToday(){
+  var d=new Date();
+  var y=d.getFullYear();
+  var m=String(d.getMonth()+1).padStart(2,'0');
+  var dd=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+dd;
+}
+
+function getMsToMidnight(){
+  var now=new Date();
+  var mid=new Date(now);
+  mid.setHours(24,0,0,0);
+  return mid-now;
+}
+
+function formatCountdown(ms){
+  if(ms<=0) return '00:00:00';
+  var s=Math.floor(ms/1000);
+  var h=Math.floor(s/3600);s%=3600;
+  var m=Math.floor(s/60);s%=60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+// ========== Safe Storage Helpers ==========
+function safeLSGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function safeLSSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function safeSSGet(k){try{return sessionStorage.getItem(k);}catch(e){return null;}}
+function safeSSSet(k,v){try{sessionStorage.setItem(k,v);}catch(e){}}
+function safeCookieGet(k){
+  try{
+    if(location.protocol!=='http:'&&location.protocol!=='https:')return null;
+    var name=k+'=';
+    var decoded=decodeURIComponent(document.cookie);
+    var ca=decoded.split(';');
+    for(var i=0;i<ca.length;i++){var c=ca[i].trim();if(c.indexOf(name)===0)return c.substring(name.length);}
+    return null;
+  }catch(e){return null;}
+}
+function safeCookieSet(k,v,expiresStr){
+  try{
+    if(location.protocol!=='http:'&&location.protocol!=='https:')return;
+    document.cookie=k+'='+encodeURIComponent(v)+';expires='+expiresStr+';path=/;SameSite=Lax';
+  }catch(e){}
+}
+
+function safeIDBGet(key){
+  return new Promise(function(resolve){
+    try{
+      var req=indexedDB.open('mcGuaDB',1);
+      req.onerror=function(){resolve(null);};
+      req.onupgradeneeded=function(e){
+        try{var db=e.target.result;if(!db.objectStoreNames.contains('records'))db.createObjectStore('records',{keyPath:'key'});}catch(e2){}
+      };
+      req.onsuccess=function(e){
+        try{
+          var db=e.target.result;
+          var tx=db.transaction('records','readonly');
+          var store=tx.objectStore('records');
+          var gr=store.get(key);
+          gr.onsuccess=function(){resolve(gr.result?gr.result.value:null);};
+          gr.onerror=function(){resolve(null);};
+        }catch(e2){resolve(null);}
+      };
+    }catch(e){resolve(null);}
+  });
+}
+
+function safeIDBSet(key,val){
+  return new Promise(function(resolve){
+    try{
+      var req=indexedDB.open('mcGuaDB',1);
+      req.onerror=function(){resolve();};
+      req.onupgradeneeded=function(e){
+        try{var db=e.target.result;if(!db.objectStoreNames.contains('records'))db.createObjectStore('records',{keyPath:'key'});}catch(e2){}
+      };
+      req.onsuccess=function(e){
+        try{
+          var db=e.target.result;
+          var tx=db.transaction('records','readwrite');
+          var store=tx.objectStore('records');
+          store.put({key:key,value:val});
+          tx.oncomplete=function(){resolve();};
+          tx.onerror=function(){resolve();};
+        }catch(e2){resolve();}
+      };
+    }catch(e){resolve();}
+  });
+}
+
+// ========== Fingerprint ==========
+var _fp=null;
+function generateFingerprint(){
+  if(_fp)return _fp;
+  var parts=[];
+  try{
+    var cv=document.createElement('canvas');
+    var ctx=cv.getContext('2d');
+    ctx.textBaseline='top';ctx.font='14px Arial';
+    ctx.fillText('fingerprint_test',2,2);
+    parts.push(cv.toDataURL().slice(0,200));
+  }catch(e){parts.push('no-canvas');}
+  try{
+    var cv2=document.createElement('canvas');
+    var gl=cv2.getContext('webgl')||cv2.getContext('experimental-webgl');
+    if(gl){var ext=gl.getExtension('WEBGL_debug_renderer_info');if(ext){parts.push(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)||'');parts.push(gl.getParameter(ext.UNMASKED_VENDOR_WEBGL)||'');}}
+  }catch(e){parts.push('no-webgl');}
+  try{parts.push(navigator.userAgent||'');}catch(e){parts.push('no-ua');}
+  try{parts.push(screen.width+'x'+screen.height+'x'+(screen.colorDepth||0));}catch(e){parts.push('no-screen');}
+  try{parts.push(Intl.DateTimeFormat().resolvedOptions().timeZone||'');}catch(e){parts.push('no-tz');}
+  try{parts.push(navigator.language||'');}catch(e){parts.push('no-lang');}
+  try{parts.push(navigator.platform||'');}catch(e){parts.push('no-platform');}
+  try{parts.push(String(navigator.hardwareConcurrency||0));}catch(e){parts.push('no-hc');}
+  var hash=cyrb53(parts.join('|||'));
+  _fp=hash.toString(16);
+  return _fp;
+}
+
+// ========== Five-Layer Check ==========
+function checkDailyLimit(today){
+  var blocked=false;
+  var storedResult=null;
+  // Layer 1: localStorage
+  try{
+    var lsDate=safeLSGet('mcGua_last');
+    if(lsDate===today){blocked=true;try{var r=safeLSGet('mcGua_result');if(r)storedResult=JSON.parse(r);}catch(e){}}
+  }catch(e){}
+  // Layer 2: fingerprint key in localStorage
+  if(!blocked){
+    try{
+      var fp=safeLSGet('mcGua_fp_'+generateFingerprint());
+      if(fp===today)blocked=true;
+    }catch(e){}
+  }
+  // Layer 3: sessionStorage
+  if(!blocked){
+    try{
+      var ss=safeSSGet('mcGua_day');
+      if(ss===today)blocked=true;
+    }catch(e){}
+  }
+  // Layer 4: Cookie
+  if(!blocked){
+    try{
+      var ck=safeCookieGet('mc_gua_day');
+      if(ck===today)blocked=true;
+    }catch(e){}
+  }
+  // Layer 5: IndexedDB (async, handled separately)
+  return {blocked:blocked,storedResult:storedResult};
+}
+
+function checkDailyLimitAsync(today){
+  var idbPromise=safeIDBGet('last').then(function(val){
+    return val===today;
+  }).catch(function(){return false;});
+  var timeoutPromise=new Promise(function(resolve){setTimeout(function(){resolve(false);},3000);});
+  return Promise.race([idbPromise,timeoutPromise]);
+}
+
+function writeDailyLimit(today,resultJSON){
+  // Layer 1
+  safeLSSet('mcGua_last',today);
+  safeLSSet('mcGua_result',resultJSON);
+  // Layer 2
+  try{safeLSSet('mcGua_fp_'+generateFingerprint(),today);}catch(e){}
+  // Layer 3
+  safeSSSet('mcGua_day',today);
+  // Layer 4
+  try{
+    var mid=new Date();mid.setHours(24,0,0,0);
+    safeCookieSet('mc_gua_day',today,mid.toUTCString());
+  }catch(e){}
+  // Layer 5
+  safeIDBSet('last',today).catch(function(){});
+}
+
+// ========== 逆天改命 Detection ==========
+function checkCheat(today){
+  try{
+    var total=parseInt(safeLSGet('mcGua_total'))||0;
+    var firstDate=safeLSGet('mcGua_first');
+    if(!firstDate){
+      safeLSSet('mcGua_first',today);
+      safeLSSet('mcGua_total','1');
+      return false;
+    }
+    var d1=new Date(firstDate+'T00:00:00');
+    var d2=new Date(today+'T00:00:00');
+    var days=Math.floor((d2-d1)/86400000)+1;
+    if(days<1)days=1;
+    if(total>days)return true;
+    return false;
+  }catch(e){return false;}
+}
+
+function incrementTotal(){
+  try{
+    var total=parseInt(safeLSGet('mcGua_total'))||0;
+    safeLSSet('mcGua_total',String(total+1));
+  }catch(e){}
+}
+
+// ========== Fortune Generation ==========
+function generateFortune(today,fp){
+  var seed=cyrb53(today+fp);
+  var rng=mulberry32(seed);
+
+  // 6 yao
+  var yaos=[];
+  for(var i=0;i<6;i++) yaos.push(rng()>=0.5?1:0);
+
+  // Upper trigram (yao 0,1,2 from bottom), Lower trigram (yao 3,4,5)
+  var upperIdx=yaos[0]*4+yaos[1]*2+yaos[2]*1;
+  var lowerIdx=yaos[3]*4+yaos[4]*2+yaos[5]*1;
+  var upper=TRIGRAMS[upperIdx];
+  var lower=TRIGRAMS[lowerIdx];
+
+  // Fortune score
+  var score=(upper.weight+lower.weight)/2+rng();
+  var level=null;
+  for(var j=FORTUNE_LEVELS.length-1;j>=0;j--){
+    if(score>=FORTUNE_LEVELS[j].min){level=FORTUNE_LEVELS[j];break;}
+  }
+  if(!level)level=FORTUNE_LEVELS[0];
+
+  // Guaci
+  var guaciIdx=Math.floor(rng()*GUACI_POOL.length);
+  var guaci=GUACI_POOL[guaciIdx];
+
+  // Yi (3 non-repeating)
+  var yiPick=pickN(rng,YI_POOL,3);
+  // Ji (3 non-repeating)
+  var jiPick=pickN(rng,JI_POOL,3);
+  // Tips (3 non-repeating)
+  var tipsPick=pickN(rng,TIPS_POOL,3);
+
+  // Lucky
+  var luckyItem=LUCKY_ITEMS[Math.floor(rng()*LUCKY_ITEMS.length)];
+  var luckyEnchant=LUCKY_ENCHANTS[Math.floor(rng()*LUCKY_ENCHANTS.length)];
+  var coordIdx=Math.floor(rng()*LUCKY_COORDS.length);
+  var luckyCoord=LUCKY_COORDS[coordIdx];
+  // Dynamic coord ~40% chance
+  if(rng()<0.4){
+    var cx=Math.floor(rng()*9900)+100;
+    var cz=Math.floor(rng()*9900)+100;
+    if(rng()<0.5)cx=-cx;
+    if(rng()<0.5)cz=-cz;
+    luckyCoord='X: '+cx+', Z: '+cz;
+  }
+  var woolIdx=Math.floor(rng()*WOOL_COLORS.length);
+  var wool=WOOL_COLORS[woolIdx];
+
+  // Poem
+  var poemIdx=Math.floor(rng()*POEM_POOL.length);
+  var poem=POEM_POOL[poemIdx];
+
+  // Masked IP from fingerprint
+  var fpNum=cyrb53(fp);
+  var ipPart1=(Math.abs(fpNum)%200)+10;
+  var ipPart2=(Math.abs(cyrb53(fp+'b'))%200)+10;
+  var maskedIP=ipPart1+'.'+ipPart2+'.*.*';
+
+  return {
+    date:today,ip:maskedIP,yaos:yaos,
+    upper:upper,lower:lower,
+    guaName:upper.name+lower.name+'卦',
+    level:level,score:score,
+    guaci:guaci,
+    yi:yiPick,ji:jiPick,tips:tipsPick,
+    luckyItem:luckyItem,luckyEnchant:luckyEnchant,
+    luckyCoord:luckyCoord,wool:wool,
+    poem:poem
+  };
+}
+
+function pickN(rng,arr,n){
+  var copy=arr.slice();
+  var result=[];
+  for(var i=0;i<n&&copy.length>0;i++){
+    var idx=Math.floor(rng()*copy.length);
+    result.push(copy[idx]);
+    copy.splice(idx,1);
+  }
+  return result;
+}
+
+
+// ========== Sound ==========
+function playDing(){
+  try{
+    var ac=new (window.AudioContext||window.webkitAudioContext)();
+    var osc=ac.createOscillator();
+    var gain=ac.createGain();
+    osc.type='sine';osc.frequency.value=880;
+    gain.gain.setValueAtTime(0.3,ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01,ac.currentTime+0.5);
+    osc.connect(gain);gain.connect(ac.destination);
+    osc.start(ac.currentTime);osc.stop(ac.currentTime+0.5);
+  }catch(e){}
+}
+
+// ========== Render Result Card ==========
+function renderResult(fortune,isBlocked,isCheat){
+  var sec=document.getElementById('resultSection');
+  var html='<div class="result-card'+(isCheat?' cheat-warn':'')+'">';
+
+  if(isCheat){
+    html+='<div class="cheat-banner">⚠ 检测到逆天改命行为（清缓存重算）——强求的卦，欧气减半。</div>';
+  }
+
+  if(isBlocked){
+    html+='<div class="blocked-banner">';
+    html+='<div>今日卦象已出</div>';
+    html+='<div class="countdown" id="countdown">'+formatCountdown(getMsToMidnight())+'</div>';
+    html+='<div class="tease">天道有常，一日一卦。贪杯者，苦力怕伺候。</div>';
+    html+='</div>';
+  }
+
+  // Level badge
+  html+='<div class="level-badge" style="color:'+fortune.level.color+';border-color:'+fortune.level.color+';background:'+fortune.level.color+'15">'+fortune.level.name+'</div>';
+
+  // Gua name
+  html+='<div class="gua-name">'+fortune.guaName+'</div>';
+
+  // Six yao diagram
+  html+='<div class="yao-diagram">';
+  // Render from top (yao 5) to bottom (yao 0) - traditional order top to bottom
+  for(var i=5;i>=0;i--){
+    html+='<div class="yao-row">';
+    if(fortune.yaos[i]===1){
+      html+='<div class="yao-yang"></div>';
+    }else{
+      html+='<div class="yao-yin"><div class="yao-yin-half"></div><div class="yao-yin-half"></div></div>';
+    }
+    html+='</div>';
+  }
+  html+='</div>';
+
+  // Trigram info
+  html+='<div class="trigram-info">';
+  html+='<div class="ti-item">'+fortune.upper.icon+' 上卦：'+fortune.upper.name+'（'+fortune.upper.domain+'）</div>';
+  html+='<div class="ti-item">'+fortune.lower.icon+' 下卦：'+fortune.lower.name+'（'+fortune.lower.domain+'）</div>';
+  html+='</div>';
+  html+='<div style="font-size:13px;color:#888;margin-top:4px">运势：'+fortune.level.text+'</div>';
+
+  // Guaci
+  html+='<div class="section-title">卦辞</div>';
+  html+='<div class="guaci-text">「'+fortune.guaci+'」</div>';
+
+  // Yi Ji
+  html+='<div class="section-title">宜忌</div>';
+  html+='<div class="yiji-grid">';
+  html+='<div class="yiji-col yi"><h4>宜</h4><ul>';
+  for(var y=0;y<fortune.yi.length;y++) html+='<li>'+fortune.yi[y]+'</li>';
+  html+='</ul></div>';
+  html+='<div class="yiji-col ji"><h4>忌</h4><ul>';
+  for(var j=0;j<fortune.ji.length;j++) html+='<li>'+fortune.ji[j]+'</li>';
+  html+='</ul></div>';
+  html+='</div>';
+
+  // Tips
+  html+='<div class="section-title">今日提示</div>';
+  html+='<ul class="tips-list">';
+  for(var t=0;t<fortune.tips.length;t++) html+='<li>'+fortune.tips[t]+'</li>';
+  html+='</ul>';
+
+  // Lucky info
+  html+='<div class="section-title">幸运信息</div>';
+  html+='<div class="lucky-grid">';
+  html+='<div class="lk-item"><span class="lk-label">幸运物</span><br>'+fortune.luckyItem+'</div>';
+  html+='<div class="lk-item"><span class="lk-label">幸运附魔</span><br>'+fortune.luckyEnchant+'</div>';
+  html+='<div class="lk-item"><span class="lk-label">幸运坐标</span><br>'+fortune.luckyCoord+'</div>';
+  html+='<div class="lk-item"><span class="lk-label">幸运方块</span><br><span class="wool-swatch" style="background:'+fortune.wool.hex+'"></span>'+fortune.wool.name+'</div>';
+  html+='</div>';
+
+  // Poem
+  html+='<div class="section-title">签诗</div>';
+  html+='<div class="poem-box">'+fortune.poem+'</div>';
+
+  // IP
+  html+='<div class="ip-line">签号：'+fortune.ip+' · '+fortune.date+'</div>';
+
+  html+='</div>';
+  sec.innerHTML=html;
+  sec.style.display='block';
+}
+
+// ========== Device Detection ==========
+// ★ 开源/部署为网站后本段可替换为服务端实现：
+//   renderRecords() → GET /api/records 返回真实访客列表
+//   saveLocalRecord() → POST /api/records 上报本机算卦记录（含设备/IP）
+//   当前这份是 pure-frontend 兜底版：本地 storage 存真实记录，无伪造。
+// ───────────────
+function detectDevice(){
+  try{
+    var ua=navigator.userAgent||'';
+    if(/iPhone|iPad|iPod/i.test(ua))return 'iPhone';
+    if(/Android/i.test(ua))return 'Android';
+    if(/Macintosh|Mac OS/i.test(ua))return 'MacBook';
+    if(/Windows/i.test(ua))return 'Windows PC';
+    return 'Unknown';
+  }catch(e){return 'Unknown';}
+}
+
+// ========== Render Records（真实记录，不伪造）==========
+function renderRecords(){
+  var sec=document.getElementById('recordsSection');
+  // 读取本地真实记录（本机算卦后保存）
+  var localRecords=[];
+  try{
+    var lr=safeLSGet('mcGua_localRecords');
+    if(lr){
+      var parsed=JSON.parse(lr);
+      if(Array.isArray(parsed))localRecords=parsed.slice(0,10);
+    }
+  }catch(e){}
+
+  if(localRecords.length===0){
+    sec.innerHTML='<div class="records-empty">还没有算卦记录，点「开始算卦」试试~</div>';
+    return;
+  }
+
+  var html='<div class="records-note">* 访客记录（本机真实记录）</div>';
+  html+='<table class="records-table"><thead><tr><th>访客</th><th>卦象</th><th>运势</th><th>时间</th></tr></thead><tbody>';
+  for(var r=0;r<localRecords.length;r++){
+    var rec=localRecords[r];
+    html+='<tr>';
+    html+='<td>'+rec.ip+'</td>';
+    html+='<td>'+rec.guaName+'</td>';
+    html+='<td class="level-cell" style="color:'+rec.levelColor+'">'+rec.levelName+'</td>';
+    html+='<td style="color:#999;font-size:12px">'+rec.time+'</td>';
+    html+='</tr>';
+  }
+  html+='</tbody></table>';
+  sec.innerHTML=html;
+}
+
+// ========== Save Local Record（保存本机真实记录）==========
+function saveLocalRecord(fortune){
+  try{
+    var lr=safeLSGet('mcGua_localRecords');
+    var arr=[];
+    if(lr){try{arr=JSON.parse(lr);if(!Array.isArray(arr))arr=[];}catch(e){arr=[];}}
+    arr.unshift({
+      ip:fortune.ip,
+      guaName:fortune.guaName,
+      levelName:fortune.level.name,
+      levelColor:fortune.level.color,
+      time:new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})
+    });
+    arr=arr.slice(0,10);
+    safeLSSet('mcGua_localRecords',JSON.stringify(arr));
+  }catch(e){}
+}
+
+// ========== 真实本机统计（无模拟数据）==========
+// ─────────────────────────────────────────────
+// ★ 开源/部署为网站时，以下访客统计应改为服务端实现：
+//   GET /api/stats?date=今日    → 返回 { visits, fortunes }
+//   POST /api/stats/visit       → 本机打开页面时上报一次访问
+//   POST /api/stats/fortune     → 算卦完成时上报一次算卦
+// 前端仅保留「展示计数器」的角色，数据源交给后端：
+//   statVisits.textContent = data.visits
+//   statFortunes.textContent = data.fortunes
+// 下面这组 countVisit/countFortune/updateStats 是纯前端兜底版，
+// 保证无服务器（本地打开文件）时依然能真实计数。
+// ─────────────────────────────────────────────
+function countVisit(today){
+  try{
+    var k='mcGua_visits_'+today;
+    var n=parseInt(safeLSGet(k))||0;
+    safeLSSet(k,String(n+1));
+    var el=document.getElementById('statVisits');
+    if(el)el.textContent=n+1;
+  }catch(e){}
+}
+
+function countFortune(today){
+  try{
+    var k='mcGua_fortuneCount_'+today;
+    var n=parseInt(safeLSGet(k))||0;
+    safeLSSet(k,String(n+1));
+    var el=document.getElementById('statFortunes');
+    if(el)el.textContent=n+1;
+  }catch(e){}
+}
+
+function updateStats(today){
+  // 读取今日真实访问/算卦计数（不伪造）
+  try{
+    var v=parseInt(safeLSGet('mcGua_visits_'+today))||0;
+    document.getElementById('statVisits').textContent=v;
+  }catch(e){}
+  try{
+    var f=parseInt(safeLSGet('mcGua_fortuneCount_'+today))||0;
+    document.getElementById('statFortunes').textContent=f;
+  }catch(e){}
+  // 页面打开即记一次访问
+  countVisit(today);
+}
+
+// ========== 上次卦象本地记忆 ==========
+function saveLastFortune(fortune){
+  try{
+    safeLSSet('mcGua_lastFortune',JSON.stringify({
+      guaName:fortune.guaName,
+      levelName:fortune.level.name,
+      levelColor:fortune.level.color,
+      date:fortune.date
+    }));
+  }catch(e){}
+}
+
+function renderLastFortune(elementId){
+  try{
+    var s=safeLSGet('mcGua_lastFortune');
+    if(!s)return;
+    var lf=JSON.parse(s);
+    var el=document.getElementById(elementId||'lastFortune');
+    if(!el)return;
+    el.innerHTML='上次卦象：<span style="font-weight:700;color:'+lf.levelColor+'">'+lf.guaName+'</span>（'+lf.levelName+'）· '+lf.date;
+    el.style.display='block';
+  }catch(e){}
+}
+
+// ========== Animation ==========
+function startAnimation(callback){
+  var btn=document.getElementById('fortuneBtn');
+  var animWrap=document.getElementById('animWrap');
+  var animText=document.getElementById('animText');
+  var progressFill=document.getElementById('progressFill');
+
+  btn.disabled=true;
+  btn.textContent='算卦中…';
+  animWrap.style.display='block';
+
+  var duration=3500+Math.floor(Math.random()*1000);
+  var startTime=Date.now();
+  var textIdx=0;
+  animText.textContent=ANIM_TEXTS[0];
+
+  var textInterval=setInterval(function(){
+    textIdx=(textIdx+1)%ANIM_TEXTS.length;
+    animText.textContent=ANIM_TEXTS[textIdx];
+  },750);
+
+  var progressInterval=setInterval(function(){
+    var elapsed=Date.now()-startTime;
+    var pct=Math.min(100,Math.floor(elapsed/duration*100));
+    progressFill.style.width=pct+'%';
+    if(elapsed>=duration){
+      clearInterval(textInterval);
+      clearInterval(progressInterval);
+      progressFill.style.width='100%';
+      setTimeout(function(){
+        animWrap.style.display='none';
+        btn.style.display='none';
+        document.querySelector('.btn-sub').style.display='none';
+        document.querySelector('.guide-text').style.display='none';
+        callback();
+      },200);
+    }
+  },50);
+}
+
+// ========== Countdown Timer ==========
+var countdownTimer=null;
+function startCountdown(){
+  if(countdownTimer)clearInterval(countdownTimer);
+  countdownTimer=setInterval(function(){
+    var el=document.getElementById('countdown');
+    if(el)el.textContent=formatCountdown(getMsToMidnight());
+  },1000);
+}
+
+// ========== Main Logic ==========
+function main(){
+  var today=getToday();
+  var fp=generateFingerprint();
+
+  updateStats(today);
+  renderLastFortune();
+
+  // Check five layers (sync part)
+  var check=checkDailyLimit(today);
+
+  // Check async layer (IndexedDB)
+  checkDailyLimitAsync(today).then(function(idbBlocked){
+    var isBlocked=check.blocked||idbBlocked;
+
+    if(isBlocked){
+      // Already done today - show result
+      var fortune;
+      if(check.storedResult){
+        fortune=check.storedResult;
+      }else{
+        fortune=generateFortune(today,fp);
+      }
+      // Hide fortune section, show result
+      document.getElementById('fortuneSection').querySelector('.guide-text').style.display='none';
+      document.getElementById('fortuneBtn').style.display='none';
+      document.querySelector('.btn-sub').style.display='none';
+      renderResult(fortune,true,false);
+      startCountdown();
+    }else{
+      // Not blocked - check cheat
+      var isCheat=checkCheat(today);
+
+      // Setup button click
+      var btn=document.getElementById('fortuneBtn');
+      btn.addEventListener('click',function(){
+        playDing();
+        startAnimation(function(){
+          var fortune=generateFortune(today,fp);
+          var resultJSON=JSON.stringify(fortune);
+          writeDailyLimit(today,resultJSON);
+          incrementTotal();
+          saveLocalRecord(fortune);
+          countFortune(today);
+          saveLastFortune(fortune);
+          renderResult(fortune,false,isCheat);
+          playDing();
+          renderLastFortune();
+          renderRecords();
+        });
+      });
+    }
+    renderRecords();
+  }).catch(function(){
+    // IDB check failed, treat as not blocked
+    var isCheat=checkCheat(today);
+    var btn=document.getElementById('fortuneBtn');
+    btn.addEventListener('click',function(){
+      playDing();
+      startAnimation(function(){
+        var fortune=generateFortune(today,fp);
+        var resultJSON=JSON.stringify(fortune);
+        writeDailyLimit(today,resultJSON);
+        incrementTotal();
+        saveLocalRecord(fortune);
+        countFortune(today);
+        saveLastFortune(fortune);
+        renderResult(fortune,false,isCheat);
+        playDing();
+        renderLastFortune();
+        renderRecords();
+      });
+    });
+    renderRecords();
+  });
+}
+
+// ========== Global Error Handling ==========
+window.onerror=function(msg,url,line){
+  // Silently handle to prevent white screen
+  try{
+    var btn=document.getElementById('fortuneBtn');
+    if(btn&&btn.disabled)btn.disabled=false;
+  }catch(e){}
+  return true;
+};
+
+// ========== Bootstrap ==========
+try{
+  main();
+}catch(e){
+  try{
+    var btn=document.getElementById('fortuneBtn');
+    if(btn){
+      btn.disabled=false;
+      btn.textContent='开始算卦';
+    }
+  }catch(e2){}
+}
+
+})();
+</script>
+</body>
+</html>

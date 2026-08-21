@@ -31,7 +31,7 @@
 | 能力 | 本地打开（file://） | 部署后（node server.js） |
 |---|---|---|
 | 今日访问/算卦统计 | localStorage 按日真实计数 | `GET /api/stats` / `POST /api/stats/visit` |
-| 访客记录 | 本机真实算卦记录 | `GET /api/records` / `POST /api/records`（含访客 IP） |
+| 访客记录 | 本机真实算卦记录 | `GET /api/records` / `POST /api/records`（掩码访客 IP，不落盘真实 IP） |
 | 上次卦象 | localStorage | localStorage（可扩展为服务端会话记忆） |
 | 每日一卦限制 | 本机指纹/存储 | 本机指纹/存储（可扩展为服务端限流） |
 
@@ -67,9 +67,20 @@ node server.js   # 默认端口 3000，可用 PORT 环境变量覆盖
 - `POST /api/stats/visit` → 上报一次访问
 - `POST /api/stats/fortune` → 上报一次算卦
 - `GET  /api/records` → 最近算卦记录
-- `POST /api/records` → 写入一条算卦记录（自动记录访客 IP）
+- `POST /api/records` → 写入一条算卦记录（接受前端掩码 IP，形如 `12.34.*.*`，绝不落盘真实 IP）
 
 数据落在 `data/` 目录（`stats.json` 按日统计、`records.json` 最近 50 条，均为 JSON 明文），服务端零依赖，无需 `npm install`。
+
+## 安全加固说明（2026-08-21 修复）
+
+| 编号 | 问题 | 修复方式 |
+|---|---|---|
+| MVW-01 | 存储型 XSS | 记录字段写入前净化（去 `<>` 与控制字符、限长），颜色只接受合法 hex；前端改用 `textContent` 渲染，双保险 |
+| MVW-02 | 访客真实 IP 明文存储并公开返回 | 服务端不再读 `remoteAddress`，只接受前端掩码 IP（形如 `12.34.*.*`），非掩码一律不落盘 |
+| MVW-03 | `/api/stats/visit`、`/api/stats/fortune` 可刷数 | 按 IP 限流（访问 120 次/分，算卦 30 次/分），超限返回 `429` |
+| MVW-04 | `/api/records` 可刷库挤占 | 写入限流（10 次/分）+ 单 IP 每日上限 30 条 + 缺卦象/运势的垃圾记录直接拒收 |
+
+限流与每日计数均为内存态，服务重启即重置；数据文件依旧零依赖、明文 JSON。
 
 ## 开源协议
 

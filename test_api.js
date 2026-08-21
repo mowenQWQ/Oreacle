@@ -37,15 +37,15 @@ waitUp(12).then(ok => {
       ['POST', '/api/stats/fortune', {}, null],
       ['POST', '/api/records', { guaName: '钻石卦·上', levelName: '欧皇大吉', levelColor: '#D4A017', time: '21:33' }, null],
       ['GET', '/api/records', null, null],
-      ['GET', '/Oreacle.html', null, 'text/html'],
-      ['GET', '/', null, 'text/html'],
+      ['GET', '/Oreacle.html', null, '200'],
+      ['GET', '/', null, '200'],
       ['GET', '/api/nope', null, '404']
     ];
     for (const [m, p, b, expect] of steps) {
       const r = await call(m, p, b);
-      const exp = expect ? (r.status === expect ? '✓' : '✗(期望' + expect + ')') : (r.status === 0 ? '✗' : '✓');
+      const exp = expect ? (String(r.status) === expect ? '✓' : '✗(期望' + expect + ')') : (r.status === 0 ? '✗' : '✓');
       console.log(`${m.padEnd(6)} ${p.padEnd(18)} → ${r.status} ${exp} ${r.status ? '' : r.body}`);
-      if (r.status && (expect === 'text/html')) console.log('   正文片段:', (r.body.match(/<title>.*?<\/title>/) || [''])[0]);
+      if (r.status && (p === '/' || p === '/Oreacle.html')) console.log('   正文片段:', (r.body.match(/<title>.*?<\/title>/) || [''])[0]);
     }
   })().then(() => { srv.kill(); console.log('（服务已停止）'); });
 });

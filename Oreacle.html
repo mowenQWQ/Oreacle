@@ -720,20 +720,57 @@ function renderRecords(){
 }
 
 // 渲染记录表格（服务端/本地共用）
+// MVW-01 修复：改用 DOM + textContent 渲染，不再用 innerHTML 拼接不可信数据
 function renderRecordRows(sec,records){
-  var html='<div class="records-note">* 访客记录（'+(IS_DEPLOYED?'服务端记录':'本机真实记录')+'）</div>';
-  html+='<table class="records-table"><thead><tr><th>访客</th><th>卦象</th><th>运势</th><th>时间</th></tr></thead><tbody>';
-  for(var r=0;r<records.length;r++){
-    var rec=records[r];
-    html+='<tr>';
-    html+='<td>'+rec.ip+'</td>';
-    html+='<td>'+rec.guaName+'</td>';
-    html+='<td class="level-cell" style="color:'+rec.levelColor+'">'+rec.levelName+'</td>';
-    html+='<td style="color:#999;font-size:12px">'+rec.time+'</td>';
-    html+='</tr>';
+  sec.innerHTML='';
+  var note=document.createElement('div');
+  note.className='records-note';
+  note.textContent='* 访客记录（'+(IS_DEPLOYED?'服务端记录':'本机真实记录')+'）';
+  sec.appendChild(note);
+
+  var table=document.createElement('table');
+  table.className='records-table';
+  var thead=document.createElement('thead');
+  var headRow=document.createElement('tr');
+  var heads=['访客','卦象','运势','时间'];
+  for(var h=0;h<heads.length;h++){
+    var th=document.createElement('th');
+    th.textContent=heads[h];
+    headRow.appendChild(th);
   }
-  html+='</tbody></table>';
-  sec.innerHTML=html;
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  var tbody=document.createElement('tbody');
+  for(var r=0;r<records.length;r++){
+    var rec=records[r]||{};
+    var tr=document.createElement('tr');
+
+    var tdIp=document.createElement('td');
+    tdIp.textContent=rec.ip||'—'; // MVW-02：无掩码 IP 时显示占位，不暴露任何真实地址
+    tr.appendChild(tdIp);
+
+    var tdGua=document.createElement('td');
+    tdGua.textContent=rec.guaName||'';
+    tr.appendChild(tdGua);
+
+    var tdLevel=document.createElement('td');
+    tdLevel.className='level-cell';
+    var lc=String(rec.levelColor||'');
+    if(/^#[0-9a-fA-F]{3,6}$/.test(lc))tdLevel.style.color=lc;
+    tdLevel.textContent=rec.levelName||'';
+    tr.appendChild(tdLevel);
+
+    var tdTime=document.createElement('td');
+    tdTime.style.color='#999';
+    tdTime.style.fontSize='12px';
+    tdTime.textContent=rec.time||'';
+    tr.appendChild(tdTime);
+
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  sec.appendChild(table);
 }
 
 // ========== Save Local Record（保存本机真实记录）==========
@@ -881,7 +918,18 @@ function renderLastFortune(elementId){
     var lf=JSON.parse(s);
     var el=document.getElementById(elementId||'lastFortune');
     if(!el)return;
-    el.innerHTML='上次卦象：<span style="font-weight:700;color:'+lf.levelColor+'">'+lf.guaName+'</span>（'+lf.levelName+'）· '+lf.date;
+    // MVW-01 兜底：不用 innerHTML，改 textContent 渲染
+    el.textContent='';
+    var lbl=document.createTextNode('上次卦象：');
+    var span=document.createElement('span');
+    span.style.fontWeight='700';
+    var lc=String(lf.levelColor||'');
+    if(/^#[0-9a-fA-F]{3,6}$/.test(lc))span.style.color=lc;
+    span.textContent=String(lf.guaName||'');
+    var rest=document.createTextNode('（'+String(lf.levelName||'')+'）· '+String(lf.date||''));
+    el.appendChild(lbl);
+    el.appendChild(span);
+    el.appendChild(rest);
     el.style.display='block';
   }catch(e){}
 }

@@ -11,8 +11,8 @@
 - **今日指引**：卦辞、宜 / 忌、今日提示、幸运物 / 幸运坐标 / 幸运附魔 / 幸运羊毛、签诗
 - **每日限制**：每日 00:00 刷新，一天只能算一次（localStorage + 设备指纹 + Cookie + IndexedDB 五层防护）
 - **逆天改命检测**：清缓存重算会被识别，欧气减半 😏
-- **真实访客记录**：算卦后自动保存本机真实记录并展示（无伪造数据）
-- **真实统计**：「今日访问 / 今日算卦」按日期记录本机真实计数（无模拟数字）
+- **真实访客记录**：算卦后自动保存真实记录并展示（无伪造数据）
+- **真实统计**：「今日访问 / 今日算卦」真实计数（无模拟数字）—— 部署时由服务端统一记录
 - **上次卦象记忆**：算过的卦自动记住，回访时顶部显示
 
 ## 为什么是"干净版"
@@ -26,29 +26,50 @@
 
 ## 开源 / 部署为网站
 
-本页面设计为**纯前端开源基础版**。代码里已在关键位置标注了`★ 开源/部署为网站后`的对照注释，接入服务端时：
+本页面为**纯前端 + 可选服务端**架构。访客统计和算卦记录由 **`server.js` 统一记录**（服务端优先），无服务端时自动回退本机真实计数。
 
-| 能力 | 当前（纯前端） | 部署后（服务端） |
+| 能力 | 本地打开（file://） | 部署后（node server.js） |
 |---|---|---|
-| 今日访问/算卦统计 | `localStorage` 按日计数 | `GET /api/stats` / `POST /api/stats/visit` |
-| 访客记录 | 本机真实算卦记录 | `GET /api/records` / `POST /api/records` |
-| 上次卦象 | `localStorage` | 服务端会话或账号记忆 |
-| 每日一卦限制 | 本机指纹/存储 | 服务端按访客标识限流 |
+| 今日访问/算卦统计 | localStorage 按日真实计数 | `GET /api/stats` / `POST /api/stats/visit` |
+| 访客记录 | 本机真实算卦记录 | `GET /api/records` / `POST /api/records`（含访客 IP） |
+| 上次卦象 | localStorage | localStorage（可扩展为服务端会话记忆） |
+| 每日一卦限制 | 本机指纹/存储 | 本机指纹/存储（可扩展为服务端限流） |
 
-把 `renderRecords` / `saveLocalRecord` / `countVisit` / `countFortune` 里的本地存储读写换成后端 API 即可，前端结构不用动。
+前端通过 `IS_DEPLOYED` 自动判断：以 http/https 打开时走服务端 API，直接双击本地打开时走 localStorage 兜底，无需改代码。
 
 ## 项目结构
 
 ```
 Oreacle/
 ├── Oreacle.html   # 赛博算卦所 单页应用
+├── server.js      # 零依赖 Node.js 服务端（统计/记录 API + 静态托管）
+├── data/          # 服务端数据（stats.json 按日统计 / records.json 算卦记录，自动生成）
+├── test_api.js    # 服务端 API 自测脚本（node test_api.js）
 ├── LICENSE        # MIT 许可证
 └── README.md      # 本说明
 ```
 
 ## 部署方式
 
-直接双击 `Oreacle.html` 即可本地使用（无需服务器）。部署到网站时，把 HTML 放到任意静态托管（GitHub Pages / 云服务器 / 对象存储 CDN）即可。
+### 方式一：本地使用（纯前端，无需服务器）
+
+直接双击 `Oreacle.html` 即可本地算卦。访问/算卦统计在本机真实计数。
+
+### 方式二：服务端记录（推荐，node 环境）
+
+```bash
+node server.js   # 默认端口 3000，可用 PORT 环境变量覆盖
+```
+
+启动后访问 `http://localhost:3000/Oreacle.html`，访问和算卦全部由服务端记录：
+
+- `GET  /api/stats` → `{ visits, fortunes }`（今日统计）
+- `POST /api/stats/visit` → 上报一次访问
+- `POST /api/stats/fortune` → 上报一次算卦
+- `GET  /api/records` → 最近算卦记录
+- `POST /api/records` → 写入一条算卦记录（自动记录访客 IP）
+
+数据落在 `data/` 目录（`stats.json` 按日统计、`records.json` 最近 50 条，均为 JSON 明文），服务端零依赖，无需 `npm install`。
 
 ## 开源协议
 

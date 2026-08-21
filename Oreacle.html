@@ -691,7 +691,18 @@ function detectDevice(){
 // ========== Render Records（真实记录，不伪造）==========
 function renderRecords(){
   var sec=document.getElementById('recordsSection');
-  // 读取本地真实记录（本机算卦后保存）
+  // ★ 部署（http/https）时：优先从服务端拉取记录
+  if(IS_DEPLOYED){
+    serverGet('/api/records',function(data){
+      if(data&&data.records&&data.records.length>0){
+        renderRecordRows(sec,data.records);
+      }else{
+        sec.innerHTML='<div class="records-empty">还没有算卦记录，点「开始算卦」试试~</div>';
+      }
+    });
+    return;
+  }
+  // 本地（file://）：读取本机真实记录
   var localRecords=[];
   try{
     var lr=safeLSGet('mcGua_localRecords');
@@ -705,11 +716,15 @@ function renderRecords(){
     sec.innerHTML='<div class="records-empty">还没有算卦记录，点「开始算卦」试试~</div>';
     return;
   }
+  renderRecordRows(sec,localRecords);
+}
 
-  var html='<div class="records-note">* 访客记录（本机真实记录）</div>';
+// 渲染记录表格（服务端/本地共用）
+function renderRecordRows(sec,records){
+  var html='<div class="records-note">* 访客记录（'+(IS_DEPLOYED?'服务端记录':'本机真实记录')+'）</div>';
   html+='<table class="records-table"><thead><tr><th>访客</th><th>卦象</th><th>运势</th><th>时间</th></tr></thead><tbody>';
-  for(var r=0;r<localRecords.length;r++){
-    var rec=localRecords[r];
+  for(var r=0;r<records.length;r++){
+    var rec=records[r];
     html+='<tr>';
     html+='<td>'+rec.ip+'</td>';
     html+='<td>'+rec.guaName+'</td>';
@@ -723,6 +738,18 @@ function renderRecords(){
 
 // ========== Save Local Record（保存本机真实记录）==========
 function saveLocalRecord(fortune){
+  // ★ 部署时同步到服务端
+  if(IS_DEPLOYED){
+    serverPost('/api/records',{
+      ip:fortune.ip,
+      guaName:fortune.guaName,
+      levelName:fortune.level.name,
+      levelColor:fortune.level.color,
+      time:new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})
+    },function(){});
+    return;
+  }
+  // 本地：保存本机真实记录
   try{
     var lr=safeLSGet('mcGua_localRecords');
     var arr=[];
@@ -739,19 +766,45 @@ function saveLocalRecord(fortune){
   }catch(e){}
 }
 
-// ========== 真实本机统计（无模拟数据）==========
+// ========== 访问/算卦统计（服务端记录，本地兜底）==========
 // ─────────────────────────────────────────────
-// ★ 开源/部署为网站时，以下访客统计应改为服务端实现：
-//   GET /api/stats?date=今日    → 返回 { visits, fortunes }
-//   POST /api/stats/visit       → 本机打开页面时上报一次访问
-//   POST /api/stats/fortune     → 算卦完成时上报一次算卦
-// 前端仅保留「展示计数器」的角色，数据源交给后端：
-//   statVisits.textContent = data.visits
-//   statFortunes.textContent = data.fortunes
-// 下面这组 countVisit/countFortune/updateStats 是纯前端兜底版，
-// 保证无服务器（本地打开文件）时依然能真实计数。
+// ★ 部署为网站（http/https 打开，由 server.js 托管）时：
+//   访问、算卦全部由服务端统一记录，页面只负责展示。
+//   GET  /api/stats?date=今日      → { visits, fortunes }
+//   POST /api/stats/visit         → 页面打开时上报一次访问
+//   POST /api/stats/fortune       → 算卦完成时上报一次算卦
+// 本地双击（file://）打开时：无服务端，自动回退本机 localStorage 真实计数。
 // ─────────────────────────────────────────────
+var IS_DEPLOYED=(location.protocol==='http:'||location.protocol==='https:');
+
+// 服务端请求助手（服务端不可用时静默失败，不影响本地兜底）
+function serverGet(url,cb){
+  if(!IS_DEPLOYED){if(cb)cb(null);return;}
+  try{
+    fetch(url).then(function(r){return r.json();}).then(function(d){cb(d);}).catch(function(){if(cb)cb(null);});
+  }catch(e){if(cb)cb(null);}
+}
+function serverPost(url,data,cb){
+  if(!IS_DEPLOYED){if(cb)cb(null);return;}
+  try{
+    fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data||{})})
+      .then(function(r){return r.json();}).then(function(d){cb(d);}).catch(function(){if(cb)cb(null);});
+  }catch(e){if(cb)cb(null);}
+}
+
 function countVisit(today){
+  // ★ 部署：上报服务端一次访问
+  if(IS_DEPLOYED){
+    serverPost('/api/stats/visit',{},function(){});
+    serverGet('/api/stats?date='+encodeURIComponent(today),function(d){
+      if(d&&typeof d.visits==='number'){
+        var el=document.getElementById('statVisits');
+        if(el)el.textContent=d.visits;
+      }
+    });
+    return;
+  }
+  // 本地：本机计数
   try{
     var k='mcGua_visits_'+today;
     var n=parseInt(safeLSGet(k))||0;
@@ -762,6 +815,18 @@ function countVisit(today){
 }
 
 function countFortune(today){
+  // ★ 部署：上报服务端一次算卦
+  if(IS_DEPLOYED){
+    serverPost('/api/stats/fortune',{},function(){});
+    serverGet('/api/stats?date='+encodeURIComponent(today),function(d){
+      if(d&&typeof d.fortunes==='number'){
+        var el=document.getElementById('statFortunes');
+        if(el)el.textContent=d.fortunes;
+      }
+    });
+    return;
+  }
+  // 本地：本机计数
   try{
     var k='mcGua_fortuneCount_'+today;
     var n=parseInt(safeLSGet(k))||0;
@@ -772,7 +837,19 @@ function countFortune(today){
 }
 
 function updateStats(today){
-  // 读取今日真实访问/算卦计数（不伪造）
+  // ★ 部署：从服务端读取今日统计
+  if(IS_DEPLOYED){
+    serverGet('/api/stats?date='+encodeURIComponent(today),function(d){
+      if(!d)return;
+      try{
+        if(typeof d.visits==='number')document.getElementById('statVisits').textContent=d.visits;
+        if(typeof d.fortunes==='number')document.getElementById('statFortunes').textContent=d.fortunes;
+      }catch(e){}
+    });
+    countVisit(today);
+    return;
+  }
+  // 本地：读取今日真实访问/算卦计数（不伪造）
   try{
     var v=parseInt(safeLSGet('mcGua_visits_'+today))||0;
     document.getElementById('statVisits').textContent=v;

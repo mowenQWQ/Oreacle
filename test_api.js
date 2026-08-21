@@ -16,8 +16,8 @@ function call(method, path, body) {
   });
 }
 
-// 以 shell 方式启动（在 Git Bash / Windows 下最可靠）
-const srv = spawn('node server.js', { cwd: 'C:/Users/32117/OneDrive/Desktop/Oreacle', shell: true, stdio: 'ignore' });
+// 直接 spawn 当前 node（不带 shell，srv.kill 能真正终止服务进程，不遗留孤儿）
+const srv = spawn(process.execPath, ['server.js'], { cwd: 'C:/Users/32117/OneDrive/Desktop/Oreacle', stdio: 'ignore' });
 
 // 探活：最多等 5 秒
 function waitUp(n) {
@@ -35,7 +35,7 @@ waitUp(12).then(ok => {
       ['POST', '/api/stats/visit', {}, null],
       ['GET', '/api/stats', null, null],
       ['POST', '/api/stats/fortune', {}, null],
-      ['POST', '/api/records', { guaName: '钻石卦·上', levelName: '欧皇大吉', levelColor: '#D4A017', time: '21:33' }, null],
+      ['POST', '/api/records', { guaName: '钻石钻石卦', levelName: '欧皇大吉' }, null],
       ['GET', '/api/records', null, null],
       ['GET', '/Oreacle.html', null, '200'],
       ['GET', '/', null, '200'],

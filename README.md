@@ -115,6 +115,14 @@ clientIp()：改为读取 X-Real-IP/X-Forwarded-For（部署相关：在 nginx �
 前端加固（路径 B）
 
 从设备指纹中移除时区字段：切时区不再改变指纹 → 不再因此产生新种子/新卦
+第一层 —— 单 IP 当天相同卦去重
+
+新增 dailyIpFortunes（ip -> {date, Set<卦|等级">}）：同一 IP 当天已抽过完全相同的卦+等级（无论 uid 是什么）→ 视为重复，返回 {ok:true, already:true}，不再入库。
+直接拦截报告复现："铸造多个 uid、同一 IP 发相同卦。
+第二层 —— 每日上限对所有请求统一生效
+
+原代码 if (!uid) { allowDailyRecord(ip) } 是缺口；现改为无条件 allowDailyRecord(ip)（单 IP 每日 30 条，含带 uid 的请求）。
+所以即使攻击者不断铸造新 uid，也只能受单 IP 每日 30 条 + 每分钟 10 条约束，无法无上限。
 ## 开源协议
 
 MIT License（见 `LICENSE` 文件）—— 可自由使用、修改、商用，保留版权声明即可。

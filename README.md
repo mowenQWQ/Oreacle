@@ -123,6 +123,15 @@ clientIp()：改为读取 X-Real-IP/X-Forwarded-For（部署相关：在 nginx �
 
 原代码 if (!uid) { allowDailyRecord(ip) } 是缺口；现改为无条件 allowDailyRecord(ip)（单 IP 每日 30 条，含带 uid 的请求）。
 所以即使攻击者不断铸造新 uid，也只能受单 IP 每日 30 条 + 每分钟 10 条约束，无法无上限。
+服务端（server.js）
+
+每条记录新增 tag 字段：uid（无 uid 时用 IP）派生的 4 位短哈希（sha256(...).slice(0,4)）
+POST /api/records 响应体返回 hash（本机小尾巴，前端可用）
+GET /api/records 额外返回 isMine：用请求方 uid 派生哈希，自动标出属于本访客的那条记录
+前端（Oreacle.html，已同步 index.html）
+
+访客列显示小尾巴：47.239.*.*·a3f2
+本机记录：整行高亮（浅绿）+ 尾缀 · 本机
 ## 开源协议
 
 MIT License（见 `LICENSE` 文件）—— 可自由使用、修改、商用，保留版权声明即可。

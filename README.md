@@ -103,7 +103,18 @@ clientIp()：改为读取 X-Real-IP/X-Forwarded-For（部署相关：在 nginx �
 绑定 127.0.0.1（部署相关：不对外暴露 node 端口）
 新增 /data/、server.js、test_api.js、.user.ini、.htaccess 静态访问拦截（安全加固）
 修改了底下的小字
+核心（server.js）：服务端每日一卦收权（NEW-05）
 
+有签名 uid cookie（正常访客）→ 一天仅一条：
+同卦重抽（清存储重抽同一卦，路径A）→ 返回 {ok:true, already:true}，幂等，不重复入库
+试图换卦（换浏览器/时区/API 直打，路径B/C/D 主体）→ HTTP 409 already done，拒绝入库
+无 uid（清 Cookie 后 / curl 直打） → 回退 IP：
+同卦幂等去重（防刷重复记录）
+保留单 IP 每日上限（30 条），垃圾请求不占配额
+新增 dailyFortuneSeen 表 + 每分钟清理
+前端加固（路径 B）
+
+从设备指纹中移除时区字段：切时区不再改变指纹 → 不再因此产生新种子/新卦
 ## 开源协议
 
 MIT License（见 `LICENSE` 文件）—— 可自由使用、修改、商用，保留版权声明即可。

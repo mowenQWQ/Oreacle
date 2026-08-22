@@ -102,6 +102,7 @@ nowTime()：记录时间从 HH:MM → 年-月-日 时:分:秒（东八区）
 clientIp()：改为读取 X-Real-IP/X-Forwarded-For（部署相关：在 nginx 反向代理后，否则 maskIp 会把所有访客打成 127.0.*.* 且限流失效）
 绑定 127.0.0.1（部署相关：不对外暴露 node 端口）
 新增 /data/、server.js、test_api.js、.user.ini、.htaccess 静态访问拦截（安全加固）
+修改了底下的小字
 
 ## 开源协议
 

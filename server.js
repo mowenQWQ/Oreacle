@@ -122,6 +122,7 @@ const DAILY_RECORD_LIMIT = 30; // 单 IP 每日可写记录数（CGNAT 共享 IP
 const rateBuckets = new Map(); // 限流桶  key -> { count, resetAt }（按 IP+接口）
 const dailyRecordCounts = new Map(); // 每日记录数  ip -> { date, count }
 const dailyFortuneSeen = new Map(); // 访客当日已抽取记录  key(uid|ip) -> { date, gua, level }
+const dailyIpFortunes = new Map(); // 单 IP 当日已抽取卦集合  ip -> { date, Set<"gua|level"> }
 
 function clientIp(req) {
   const xri = (req.headers['x-real-ip'] || '').trim();
@@ -193,6 +194,7 @@ setInterval(() => {
   for (const [k, v] of dailyVisits) if (v !== t) dailyVisits.delete(k);
   for (const [k, v] of dailyFortunes) if (v !== t) dailyFortunes.delete(k);
   for (const [k, v] of dailyFortuneSeen) if (v.date !== t) dailyFortuneSeen.delete(k);
+  for (const [k, v] of dailyIpFortunes) if (v.date !== t) dailyIpFortunes.delete(k);
 }, RATE_WINDOW_MS).unref();
 
 const CORS = {
@@ -320,12 +322,19 @@ const server = http.createServer(async (req, res) => {
           }
           // 无 uid（共享 IP 下不同访客抽到不同卦）：放行，由下方每日上限约束
         }
-        if (!uid) {
-          // NEW-02：IP 兜底仍受单 IP 每日上限约束（白名单校验通过后才消耗配额）
-          if (!allowDailyRecord(ip)) {
-            sendJson(res, 429, { ok: false, error: 'daily record limit reached' });
-            return;
-          }
+        // MVW-11 修复（IP 级）：单 IP 当天相同的「卦+等级」，不论 uid 是否铸造，一律视为重复，幂等返回。
+        // 攻击者用 POST /api/stats/visit 铸造多 uid 发【相同卦】的刷记录行为在此被拦截。
+        const pair = guaName + '|' + levelName;
+        const ipRow = dailyIpFortunes.get(ip);
+        if (ipRow && ipRow.date === t && ipRow.set.has(pair)) {
+          sendJson(res, 200, { ok: true, already: true });
+          return;
+        }
+        // MVW-11 修复（IP 级）：每日上限对【所有】记录请求统一生效（含带 uid 的）。
+        // uid 可被无限铸造，若仅对无 uid 的请求限流则可被绕过；发【不同卦】仍受此上限约束。
+        if (!allowDailyRecord(ip)) {
+          sendJson(res, 429, { ok: false, error: 'daily record limit reached' });
+          return;
         }
         // 全部字段服务端生成/映射：IP 打码、颜色按等级、时间当前时间
         await addRecord({
@@ -335,6 +344,8 @@ const server = http.createServer(async (req, res) => {
           levelColor: LEVEL_COLOR_MAP[levelName],
           time: nowTime()
         });
+        if (ipRow && ipRow.date === t) ipRow.set.add(pair);
+        else dailyIpFortunes.set(ip, { date: t, set: new Set([pair]) });
         dailyFortuneSeen.set(key, { date: t, gua: guaName, level: levelName });
         sendJson(res, 200, { ok: true });
       } catch (e) { sendJson(res, 400, { ok: false, error: 'bad json' }); }

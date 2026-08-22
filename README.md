@@ -85,6 +85,13 @@ node server.js   # 默认端口 3000，可用 PORT 环境变量覆盖
 | NEW-04 | `stats.json` 并发写竞争 | 读-改-写经 Promise 串行化 + 临时文件重命名**原子写**，防并发丢更新 / 半截 JSON |
 
 限流与每日计数/去重均为内存态，服务重启即重置；数据文件依旧零依赖、明文 JSON。
+
+
+
+
+
+
+
 更新：
 2026/8/23
 删除了 <head> 里的 __itrace（阿里云）监控上报脚本（含 g.alicdn.com/woodpeckerx/... 与 px.effirst.com 上报），功能无影响。

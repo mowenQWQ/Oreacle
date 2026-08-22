@@ -159,6 +159,11 @@ const UID_SECRET = crypto.randomBytes(32).toString('hex');
 const dailyVisits = new Map();   // uid|ip -> date
 const dailyFortunes = new Map(); // uid|ip -> date
 
+// 短哈希：uid(或IP) 派生，用于访客记录展示小尾巴（区分同一 IP 下不同访客 + 本机标注）
+function shortHash(str) {
+  return crypto.createHash('sha256').update(String(str)).digest('hex').slice(0, 4);
+}
+
 function getUid(req) {
   const m = (req.headers.cookie || '').match(/oreacle_uid=([^;]+)/);
   if (!m) return null;
@@ -280,7 +285,11 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 429, { ok: false, error: 'too many requests' });
       return;
     }
-    sendJson(res, 200, { records: getRecords().slice(0, 1000) });
+    // 标注本机：用请求方 uid（若已签发）派生短哈希，匹配该访客自己的记录
+    const meUid = getUid(req);
+    const meTag = meUid ? shortHash(meUid) : '';
+    const records = getRecords().slice(0, 1000).map(r => Object.assign({}, r, { isMine: !!meTag && r.tag === meTag }));
+    sendJson(res, 200, { records });
     return;
   }
   if (p === '/api/records' && req.method === 'POST') {
@@ -308,16 +317,17 @@ const server = http.createServer(async (req, res) => {
         const t = today();
         const uid = getUid(req);
         const key = uid || ('ip:' + ip);
+        const visitorHash = shortHash(uid || ('ip:' + ip)); // uid(或IP)派生的短哈希, 用于记录小尾巴
         const seen = dailyFortuneSeen.get(key);
         if (seen && seen.date === t) {
           if (seen.gua === guaName && seen.level === levelName) {
             // 同一访客清存储重抽到的同一卦：幂等，不重复入库（路径A）
-            sendJson(res, 200, { ok: true, already: true });
+            sendJson(res, 200, { ok: true, already: true, hash: visitorHash });
             return;
           }
           if (uid) {
             // 有 uid 却试图换卦（换浏览器/时区等重抽）：服务端拒绝该记录（路径B/C主体）
-            sendJson(res, 409, { ok: false, error: 'already done' });
+            sendJson(res, 409, { ok: false, error: 'already done', hash: visitorHash });
             return;
           }
           // 无 uid（共享 IP 下不同访客抽到不同卦）：放行，由下方每日上限约束
@@ -327,7 +337,7 @@ const server = http.createServer(async (req, res) => {
         const pair = guaName + '|' + levelName;
         const ipRow = dailyIpFortunes.get(ip);
         if (ipRow && ipRow.date === t && ipRow.set.has(pair)) {
-          sendJson(res, 200, { ok: true, already: true });
+          sendJson(res, 200, { ok: true, already: true, hash: visitorHash });
           return;
         }
         // MVW-11 修复（IP 级）：每日上限对【所有】记录请求统一生效（含带 uid 的）。
@@ -342,12 +352,13 @@ const server = http.createServer(async (req, res) => {
           guaName: guaName,
           levelName: levelName,
           levelColor: LEVEL_COLOR_MAP[levelName],
-          time: nowTime()
+          time: nowTime(),
+          tag: visitorHash
         });
         if (ipRow && ipRow.date === t) ipRow.set.add(pair);
         else dailyIpFortunes.set(ip, { date: t, set: new Set([pair]) });
         dailyFortuneSeen.set(key, { date: t, gua: guaName, level: levelName });
-        sendJson(res, 200, { ok: true });
+        sendJson(res, 200, { ok: true, hash: visitorHash });
       } catch (e) { sendJson(res, 400, { ok: false, error: 'bad json' }); }
     });
     return;

@@ -1,7 +1,7 @@
 // Oreacle 服务端 —— 零依赖 Node.js（仅内置模块）
 // 提供：访客统计 API + 算卦记录 API + 静态托管 Oreacle.html
 // 运行：node server.js  （默认端口 3000，可用 PORT 环境变量覆盖）
-// 数据：data/stats.json（按日统计）、data/records.json（最近 50 条记录）
+// 数据：data/stats.json（按日统计）、data/records.json（最近 1000 条记录）
 //
 // 安全加固记录（2026-08-21 夜 · MVW-01~04 + NEW-01~04）：
 //   MVW-01 存储型 XSS   → 展示字段改由服务端白名单生成，无注入面
@@ -49,9 +49,9 @@ function withLock(fn) {
 function today() {
   return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
 }
-// NEW-01：记录时间由服务端生成（东八区 HH:MM），不采信客户端
+// NEW-01：记录时间由服务端生成（东八区 年月日 时:分:秒 完整时间），不采信客户端
 function nowTime() {
-  return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(11, 16);
+  return new Date(Date.now() + 8 * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 19);
 }
 
 function getStats() {
@@ -78,8 +78,8 @@ function addRecord(rec) {
   return withLock(() => {
     const r = getRecords();
     r.unshift(rec);
-    writeJsonAtomic(RECORDS_FILE, r.slice(0, 50));
-    return r.slice(0, 50);
+    writeJsonAtomic(RECORDS_FILE, r.slice(0, 1000));
+    return r.slice(0, 1000);
   });
 }
 
@@ -123,7 +123,10 @@ const rateBuckets = new Map(); // 限流桶  key -> { count, resetAt }（按 IP+
 const dailyRecordCounts = new Map(); // 每日记录数  ip -> { date, count }
 
 function clientIp(req) {
-  return (req.socket.remoteAddress || 'unknown').replace(/^::ffff:/, '');
+  const xri = (req.headers['x-real-ip'] || '').trim();
+  const xff = (req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const raw = xri || xff || (req.socket.remoteAddress || 'unknown');
+  return raw.replace(/^::ffff:/, '');
 }
 function allowRate(key, limit, windowMs) {
   const now = Date.now();
@@ -273,7 +276,7 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 429, { ok: false, error: 'too many requests' });
       return;
     }
-    sendJson(res, 200, { records: getRecords().slice(0, 10) });
+    sendJson(res, 200, { records: getRecords().slice(0, 1000) });
     return;
   }
   if (p === '/api/records' && req.method === 'POST') {
@@ -318,6 +321,11 @@ const server = http.createServer(async (req, res) => {
   // ─── 静态托管 ───
   let filePath = p === '/' ? path.join(ROOT, 'Oreacle.html') : path.join(ROOT, decodeURIComponent(p));
   if (!filePath.startsWith(ROOT)) { sendJson(res, 403, { ok: false, error: 'forbidden' }); return; } // 防路径穿越
+  // 防护：禁止直接读取内部数据与源码文件（nginx 层亦拦截 /data/）
+  if (p === '/data' || p.startsWith('/data/') ||
+      /^\/(server\.js|test_api\.js|\.user\.ini|\.htaccess)$/.test(p)) {
+    sendJson(res, 403, { ok: false, error: 'forbidden' }); return;
+  }
   fs.stat(filePath, (err, st) => {
     if (err || !st.isFile()) { sendJson(res, 404, { ok: false, error: 'not found' }); return; }
     const ext = path.extname(filePath).toLowerCase();
@@ -326,7 +334,7 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
   console.log('▶ Oreacle 服务已启动：http://localhost:' + PORT);
   console.log('  静态页面：http://localhost:' + PORT + '/Oreacle.html');
   console.log('  API：/api/stats  /api/stats/visit  /api/stats/fortune  /api/records');

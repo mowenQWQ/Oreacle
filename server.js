@@ -121,6 +121,7 @@ const DAILY_RECORD_LIMIT = 30; // 单 IP 每日可写记录数（CGNAT 共享 IP
 
 const rateBuckets = new Map(); // 限流桶  key -> { count, resetAt }（按 IP+接口）
 const dailyRecordCounts = new Map(); // 每日记录数  ip -> { date, count }
+const dailyFortuneSeen = new Map(); // 访客当日已抽取记录  key(uid|ip) -> { date, gua, level }
 
 function clientIp(req) {
   const xri = (req.headers['x-real-ip'] || '').trim();
@@ -191,6 +192,7 @@ setInterval(() => {
   for (const [k, v] of dailyRecordCounts) if (v.date !== t) dailyRecordCounts.delete(k);
   for (const [k, v] of dailyVisits) if (v !== t) dailyVisits.delete(k);
   for (const [k, v] of dailyFortunes) if (v !== t) dailyFortunes.delete(k);
+  for (const [k, v] of dailyFortuneSeen) if (v.date !== t) dailyFortuneSeen.delete(k);
 }, RATE_WINDOW_MS).unref();
 
 const CORS = {
@@ -299,10 +301,31 @@ const server = http.createServer(async (req, res) => {
           sendJson(res, 400, { ok: false, error: 'invalid level' });
           return;
         }
-        // NEW-02：白名单校验通过后才消耗每日配额，垃圾请求不占额度
-        if (!allowDailyRecord(ip)) {
-          sendJson(res, 429, { ok: false, error: 'daily record limit reached' });
-          return;
+        // NEW-05：服务端「每日一卦」enforcement —— 有签名 uid 时一天仅一条（同卦幂等、异卦拒绝）
+        //         无 uid（清 Cookie / API 直打）回退 IP：同卦幂等去重 + 单 IP 每日上限
+        const t = today();
+        const uid = getUid(req);
+        const key = uid || ('ip:' + ip);
+        const seen = dailyFortuneSeen.get(key);
+        if (seen && seen.date === t) {
+          if (seen.gua === guaName && seen.level === levelName) {
+            // 同一访客清存储重抽到的同一卦：幂等，不重复入库（路径A）
+            sendJson(res, 200, { ok: true, already: true });
+            return;
+          }
+          if (uid) {
+            // 有 uid 却试图换卦（换浏览器/时区等重抽）：服务端拒绝该记录（路径B/C主体）
+            sendJson(res, 409, { ok: false, error: 'already done' });
+            return;
+          }
+          // 无 uid（共享 IP 下不同访客抽到不同卦）：放行，由下方每日上限约束
+        }
+        if (!uid) {
+          // NEW-02：IP 兜底仍受单 IP 每日上限约束（白名单校验通过后才消耗配额）
+          if (!allowDailyRecord(ip)) {
+            sendJson(res, 429, { ok: false, error: 'daily record limit reached' });
+            return;
+          }
         }
         // 全部字段服务端生成/映射：IP 打码、颜色按等级、时间当前时间
         await addRecord({
@@ -312,6 +335,7 @@ const server = http.createServer(async (req, res) => {
           levelColor: LEVEL_COLOR_MAP[levelName],
           time: nowTime()
         });
+        dailyFortuneSeen.set(key, { date: t, gua: guaName, level: levelName });
         sendJson(res, 200, { ok: true });
       } catch (e) { sendJson(res, 400, { ok: false, error: 'bad json' }); }
     });

@@ -388,7 +388,6 @@ function generateFingerprint(){
   }catch(e){parts.push('no-webgl');}
   try{parts.push(navigator.userAgent||'');}catch(e){parts.push('no-ua');}
   try{parts.push(screen.width+'x'+screen.height+'x'+(screen.colorDepth||0));}catch(e){parts.push('no-screen');}
-  try{parts.push(Intl.DateTimeFormat().resolvedOptions().timeZone||'');}catch(e){parts.push('no-tz');}
   try{parts.push(navigator.language||'');}catch(e){parts.push('no-lang');}
   try{parts.push(navigator.platform||'');}catch(e){parts.push('no-platform');}
   try{parts.push(String(navigator.hardwareConcurrency||0));}catch(e){parts.push('no-hc');}

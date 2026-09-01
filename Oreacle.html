@@ -491,9 +491,9 @@ function generateFortune(today,fp){
   var yaos=[];
   for(var i=0;i<6;i++) yaos.push(rng()>=0.5?1:0);
 
-  // Upper trigram (yao 0,1,2 from bottom), Lower trigram (yao 3,4,5)
-  var upperIdx=yaos[0]*4+yaos[1]*2+yaos[2]*1;
-  var lowerIdx=yaos[3]*4+yaos[4]*2+yaos[5]*1;
+  // Upper trigram = top three yao (yao 3,4,5), lower trigram = bottom three yao (yao 0,1,2)
+  var upperIdx=yaos[3]*4+yaos[4]*2+yaos[5]*1;
+  var lowerIdx=yaos[0]*4+yaos[1]*2+yaos[2]*1;
   var upper=TRIGRAMS[upperIdx];
   var lower=TRIGRAMS[lowerIdx];
 
@@ -551,8 +551,32 @@ function generateFortune(today,fp){
     yi:yiPick,ji:jiPick,tips:tipsPick,
     luckyItem:luckyItem,luckyEnchant:luckyEnchant,
     luckyCoord:luckyCoord,wool:wool,
-    poem:poem
+    poem:poem,
+    mappingVersion:2
   };
+}
+
+// 兼容修复前缓存：旧版本把上下三爻的名称标反了，六爻本身不变。
+function normalizeFortune(fortune){
+  if(!fortune||!Array.isArray(fortune.yaos)||fortune.yaos.length!==6)return fortune;
+  var upperIdx=fortune.yaos[3]*4+fortune.yaos[4]*2+fortune.yaos[5];
+  var lowerIdx=fortune.yaos[0]*4+fortune.yaos[1]*2+fortune.yaos[2];
+  fortune.upper=TRIGRAMS[upperIdx];
+  fortune.lower=TRIGRAMS[lowerIdx];
+  fortune.guaName=fortune.upper.name+fortune.lower.name+'卦';
+  fortune.mappingVersion=2;
+  return fortune;
+}
+
+function normalizeLegacyGuaName(name){
+  for(var u=0;u<TRIGRAMS.length;u++){
+    for(var l=0;l<TRIGRAMS.length;l++){
+      if(TRIGRAMS[u].name+TRIGRAMS[l].name+'卦'===name){
+        return TRIGRAMS[l].name+TRIGRAMS[u].name+'卦';
+      }
+    }
+  }
+  return name;
 }
 
 function pickN(rng,arr,n){
@@ -908,7 +932,8 @@ function saveLastFortune(fortune){
       guaName:fortune.guaName,
       levelName:fortune.level.name,
       levelColor:fortune.level.color,
-      date:fortune.date
+      date:fortune.date,
+      mappingVersion:2
     }));
   }catch(e){}
 }
@@ -925,9 +950,11 @@ function renderLastFortune(elementId){
     var lbl=document.createTextNode('上次卦象：');
     var span=document.createElement('span');
     span.style.fontWeight='700';
+    var guaName=String(lf.guaName||'');
+    if(lf.mappingVersion!==2)guaName=normalizeLegacyGuaName(guaName);
     var lc=String(lf.levelColor||'');
     if(/^#[0-9a-fA-F]{3,6}$/.test(lc))span.style.color=lc;
-    span.textContent=String(lf.guaName||'');
+    span.textContent=guaName;
     var rest=document.createTextNode('（'+String(lf.levelName||'')+'）· '+String(lf.date||''));
     el.appendChild(lbl);
     el.appendChild(span);
@@ -1005,7 +1032,8 @@ function main(){
       // Already done today - show result
       var fortune;
       if(check.storedResult){
-        fortune=check.storedResult;
+        fortune=normalizeFortune(check.storedResult);
+        safeLSSet('mcGua_result',JSON.stringify(fortune));
       }else{
         fortune=generateFortune(today,fp);
       }

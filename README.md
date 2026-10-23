@@ -2,6 +2,8 @@
 
 > **Oreacle** = Ore（矿石）+ Oracle（神谕）—— 挖矿与占卜的双关。本页中文名：我的世界 · 赛博算卦所。
 
+> ⚠️ **AI 使用说明**：本作品由 AI 辅助生成（生成时间：2026-08-21）。仅供学习与参考使用，发布、引用或投入使用前请人工核实关键信息。
+
 一个纯前端的 Minecraft 主题"每日一卦"网页 —— 打开页面，点一下"开始算卦"，红石电路帮你算今日运势。
 
 ## 功能
@@ -86,12 +88,6 @@ node server.js   # 默认端口 3000，可用 PORT 环境变量覆盖
 
 限流与每日计数/去重均为内存态，服务重启即重置；数据文件依旧零依赖、明文 JSON。
 
-
-
-
-
-
-
 更新：
 2026/8/23
 删除了 <head> 里的 __itrace（阿里云）监控上报脚本（含 g.alicdn.com/woodpeckerx/... 与 px.effirst.com 上报），功能无影响。
@@ -139,11 +135,3 @@ MIT License（见 `LICENSE` 文件）—— 可自由使用、修改、商用，
 ---
 
 **说明**：卦象纯属娱乐，挖矿请遵守（游戏内的）物理规律。
-
----
-
-## 🤖 AI 使用声明 / AI Usage Disclosure
-
-本项目在开发与维护过程中使用了 AI 编程助手（Claude / Anthropic）辅助代码编写、文档整理与问题排查；核心决策、内容审核与最终发布由维护者完成。
-
-This project was developed and maintained with the assistance of an AI coding assistant (Claude / Anthropic) for coding, documentation, and troubleshooting. Core decisions, content review, and final releases are made by the maintainer.
